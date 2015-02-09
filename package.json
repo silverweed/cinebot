@@ -1,9 +1,10 @@
 {
 	"name": "cinebot",
-	"version": "0.1",
+	"version": "0.1.0",
 	"description": "automatizes compilation of cineteatrosanluigi templates",
 	"license": "GNU GPL v3",
 	"dependencies": {
-		"cheerio": ">= 0.18.0"
+		"cheerio": ">= 0.18.0",
+		"coffeescript": ">= 1.9.0"
 	}
 }

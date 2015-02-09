@@ -12,6 +12,7 @@ var Parser = (function () {
 		this.data = {};
 		this.type = 'CS';
 		this.dataReady = false;
+		this.dates = [];
 		this.ee = new EventEmitter();
 	}
 	Parser.prototype.parse = function (url, opts) {
@@ -103,16 +104,35 @@ var Parser = (function () {
 		this.ee.emit('dataReady', this.data);
 		return this;
 	}
-	// Fill cineteatro template with data. Should only be called when dataReady == true.
+	// Fill cineteatro template with data. Should only be called when dataReady == true. For ease of writing,
+	// this function is compiled from Coffeescript.
 	Parser.prototype.emitCode = function () {
-		var code;
-		code = "<head>\n<style>\nli.orario\n{\n  margin-top: 15px;\n  color: #000;\n  font-size: large;\n}\n</style>\n</head>\n<div style=\"float: left; margin: 15px 15px 15px 0px;\"><iframe src=\"http://www.youtube.com/embed/" + this.data.yturl + "?iv_load_policy=3&start=12\" height=\"260\" width=\"320\" allowfullscreen=\"\" frameborder=\"0\"></iframe></div>\n<strong>IN SALA:</strong>\n<ul style=\"margin-left: 450px; font-family: arial;\">\n	<!-- <li class=\"orario\">Inserire l'orario</li> -->\n</ul>\n\n" + this.data.preplot + "\n<!--more-->\n" + this.data.postplot + "\n\n<br clear=\"left\" />\n\n<strong>GENERE:</strong> " + this.data.genre + "\n\n<strong>NAZIONE E ANNO:</strong> " + this.data.country + " " + this.data.year + "\n\n<strong>DURATA:</strong> " + this.data.duration + "\n\n<strong>REGIA:</strong> " + this.data.direction + "\n\n<strong>CAST:</strong>\n<ul>\n" + (this.data.cast && this.data.cast.map(function(e) {
-		  return "\t<li>" + e + "</li>";
-		}).join("\n")) + "\n</ul>\n\n<strong>PREZZI:</strong>\n- <em>Intero:</em> 6 €\n- <em>Ridotto</em>: 4,50 €";
+		var code, date;
+		code = "<head>\n<style>\nli.orario\n{\n  margin-top: 15px;\n  color: #000;\n  font-size: large;\n}\n</style>\n</head>\n<div style=\"float: left; margin: 15px 15px 15px 0px;\"><iframe src=\"http://www.youtube.com/embed/" + this.data.yturl + "?iv_load_policy=3&start=12\" height=\"260\" width=\"320\" allowfullscreen=\"\" frameborder=\"0\"></iframe></div>\n<strong>IN SALA:</strong>\n<ul style=\"margin-left: 450px; font-family: arial;\">\n" + (this.dates.length > 0 ? ((function() {
+		  var _i, _len, _ref, _results;
+		  _ref = this.dates;
+		  _results = [];
+		  for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+		    date = _ref[_i];
+		    _results.push("\t<li class=\"orario\">" + date + "</li>");
+		  }
+		  return _results;
+		}).call(this)).join("\n") : "	<!-- <li class=\"orario\">Inserire l'orario</li> -->") + "\n</ul>\n\n" + this.data.preplot + "\n<!--more-->\n" + this.data.postplot + "\n\n<br clear=\"left\" />\n\n<strong>GENERE:</strong> " + this.data.genre + "\n\n<strong>NAZIONE E ANNO:</strong> " + this.data.country + " " + this.data.year + "\n\n<strong>DURATA:</strong> " + this.data.duration + "\n\n<strong>REGIA:</strong> " + this.data.direction + "\n\n<strong>CAST:</strong>\n<ul>\n	" + (this.data.cast.map(function(e) {
+		  return "<li>" + e + "</li>";
+		})) + "\n</ul>\n\n<strong>PREZZI:</strong>\n- <em>Intero:</em> 6 €\n- <em>Ridotto</em>: 4,50 €";
 		return code;
 	}
 	Parser.prototype.on = function (selector, callback) {
 		return this.ee.on(selector, callback);
+	}
+
+	Parser.prototype.setDates = function (rawdates) {
+		var lines = rawdates.split("\n");
+		for (var i = 0; i < lines.length; ++i) {
+			if (lines[i].match(/^\s*(Luned[iì]|Marted[iì]|Mercoled[iì]|Gioved[iì]|Venerd[iì]|Sabato|Domenica) [0-9]+ (alle )?ore [0-9\-:.,]+\s*$/i)) {
+				this.dates.push(lines[i].trim());
+			}
+		}
 	}
 
 	return Parser;
