@@ -4,12 +4,13 @@ var fs = require('fs');
 var parser = require('./cineparser');
 
 var port = 8888;
+parser.apiKey = fs.readFileSync('./api.key', 'utf8');
 
 http.createServer(function (req, resp) {
 	var u = url.parse(req.url, true);
 	switch (u.pathname) {
 	case '/process':
-		parser.on('dataReady', function (data) {
+		parser.on('ready', function (data) {
 			resp.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
 			resp.end(parser.emitCode(), 'utf8');
 		});

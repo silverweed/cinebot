@@ -4,20 +4,45 @@
  */
 var cheerio = require('cheerio');
 var fs = require('fs');
+var https = require('https');
 var exec = require('child_process').exec;
 var EventEmitter = require('events').EventEmitter;
 
 var Parser = (function () {
 	function Parser() {
 		this.data = {};
+		this.yturl = null;
 		this.type = 'CS';
 		this.dataReady = false;
 		this.dates = [];
 		this.ee = new EventEmitter();
+		this.apiKey = null;
+		this.ytReady = false;
 	}
 	Parser.prototype.parse = function (url, opts) {
 		var file = 'pages/' + url.split('/')[4];
 		var that = this;
+		if (this.apiKey) {
+			this.ytReady = false;
+			https.get('https://www.googleapis.com/youtube/v3/search?part=id&q=' + file.slice(6).replace(/-/g, '+') +
+				'&videoEmbeddable=true&maxResults=1&regionCode=IT&type=video&key=' + this.apiKey,
+				function (resp) {
+					var body = '';
+					resp.on('data', function (d) { body += d; });
+					resp.on('end', function () {
+						console.log(body);
+						var video = JSON.parse(body);
+						if (!video.items) {
+							console.log("Invalid response from YouTube API: " + video);
+							return;
+						}
+						that.yturl = video.items[0].id.videoId;
+						that.ytReady = true;
+						if (that.dataReady)
+							that.ee.emit('ready');
+					});
+				}).on('error', function (e) { console.log("Error: " + e); });
+		}		
 		if (fs.existsSync(file)) {
 			that.parseCS(file);
 			console.log("Parsed page " + file + ".");
@@ -101,14 +126,15 @@ var Parser = (function () {
 			}				
 		}
 		this.dataReady = true;
-		this.ee.emit('dataReady', this.data);
+		if (this.ytReady)
+			this.ee.emit('ready');
 		return this;
 	}
 	// Fill cineteatro template with data. Should only be called when dataReady == true. For ease of writing,
 	// this function is compiled from Coffeescript.
 	Parser.prototype.emitCode = function () {
 		var code, date;
-		code = "<head>\n<style>\nli.orario\n{\n  margin-top: 15px;\n  color: #000;\n  font-size: large;\n}\n</style>\n</head>\n<div style=\"float: left; margin: 15px 15px 15px 0px;\"><iframe src=\"http://www.youtube.com/embed/" + this.data.yturl + "?iv_load_policy=3&start=12\" height=\"260\" width=\"320\" allowfullscreen=\"\" frameborder=\"0\"></iframe></div>\n<strong>IN SALA:</strong>\n<ul style=\"margin-left: 450px; font-family: arial;\">\n" + (this.dates.length > 0 ? ((function() {
+		code = "<head>\n<style>\nli.orario\n{\n  margin-top: 15px;\n  color: #000;\n  font-size: large;\n}\n</style>\n</head>\n<div style=\"float: left; margin: 15px 15px 15px 0px;\"><iframe src=\"http://www.youtube.com/embed/" + this.yturl + "?iv_load_policy=3\" height=\"260\" width=\"320\" allowfullscreen=\"\" frameborder=\"0\"></iframe></div>\n<strong>IN SALA:</strong>\n<ul style=\"margin-left: 450px; font-family: arial;\">\n" + (this.dates.length > 0 ? ((function() {
 		  var _i, _len, _ref, _results;
 		  _ref = this.dates;
 		  _results = [];

@@ -29,4 +29,6 @@ node_modules
 
 emitCode.js
 
-pages
+pages/*
+
+api.key
