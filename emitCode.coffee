@@ -35,7 +35,7 @@ wrapper =
 
 		<strong>CAST:</strong>
 		<ul>
-			#{@data.cast.map (e) -> return "<li>#{e}</li>"}
+		#{(@data.cast.map (e) -> return "\t<li>#{e}</li>").join "\n"}
 		</ul>
 
 		<strong>PREZZI:</strong>

@@ -117,9 +117,9 @@ var Parser = (function () {
 		    _results.push("\t<li class=\"orario\">" + date + "</li>");
 		  }
 		  return _results;
-		}).call(this)).join("\n") : "	<!-- <li class=\"orario\">Inserire l'orario</li> -->") + "\n</ul>\n\n" + this.data.preplot + "\n<!--more-->\n" + this.data.postplot + "\n\n<br clear=\"left\" />\n\n<strong>GENERE:</strong> " + this.data.genre + "\n\n<strong>NAZIONE E ANNO:</strong> " + this.data.country + " " + this.data.year + "\n\n<strong>DURATA:</strong> " + this.data.duration + "\n\n<strong>REGIA:</strong> " + this.data.direction + "\n\n<strong>CAST:</strong>\n<ul>\n	" + (this.data.cast.map(function(e) {
-		  return "<li>" + e + "</li>";
-		})) + "\n</ul>\n\n<strong>PREZZI:</strong>\n- <em>Intero:</em> 6 €\n- <em>Ridotto</em>: 4,50 €";
+		}).call(this)).join("\n") : "	<!-- <li class=\"orario\">Inserire l'orario</li> -->") + "\n</ul>\n\n" + this.data.preplot + "\n<!--more-->\n" + this.data.postplot + "\n\n<br clear=\"left\" />\n\n<strong>GENERE:</strong> " + this.data.genre + "\n\n<strong>NAZIONE E ANNO:</strong> " + this.data.country + " " + this.data.year + "\n\n<strong>DURATA:</strong> " + this.data.duration + "\n\n<strong>REGIA:</strong> " + this.data.direction + "\n\n<strong>CAST:</strong>\n<ul>\n" + (this.data.cast.map(function(e) {
+		  return "\t<li>" + e + "</li>";
+		}).join("\n")) + "\n</ul>\n\n<strong>PREZZI:</strong>\n- <em>Intero:</em> 6 €\n- <em>Ridotto</em>: 4,50 €";
 		return code;
 	}
 	Parser.prototype.on = function (selector, callback) {
