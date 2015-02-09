@@ -16,7 +16,7 @@ var Parser = (function () {
 		this.ee = new EventEmitter();
 	}
 	Parser.prototype.parse = function (url, opts) {
-		var file = url.split('/')[4];
+		var file = 'pages/' + url.split('/')[4];
 		var that = this;
 		if (fs.existsSync(file)) {
 			that.parseCS(file);
