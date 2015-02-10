@@ -10,6 +10,7 @@ http.createServer(function (req, resp) {
 	var u = url.parse(req.url, true);
 	switch (u.pathname) {
 	case '/process':
+		parser.reset();
 		parser.on('ready', function (data) {
 			resp.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
 			resp.end(parser.emitCode(), 'utf8');

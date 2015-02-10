@@ -161,6 +161,10 @@ var Parser = (function () {
 		}
 	}
 
+	Parser.prototype.reset = function () {
+		this.dates = [];
+	}
+
 	return Parser;
 })();
 
