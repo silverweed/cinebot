@@ -160,9 +160,15 @@ var Parser = (function () {
 
 	Parser.prototype.setDates = function (rawdates) {
 		var lines = rawdates.split("\n");
+		var m;
 		for (var i = 0; i < lines.length; ++i) {
-			if (lines[i].match(/^\s*(Luned[iì]|Marted[iì]|Mercoled[iì]|Gioved[iì]|Venerd[iì]|Sabato|Domenica) [0-9]+ (alle )?ore [0-9\-:.,]+\s*$/i)) {
-				this.dates.push(lines[i].trim());
+			console.log("line: "+lines[i]);
+			if ((m = lines[i].match(/^\s*(Luned.|Marted.|Mercoled.|Gioved.|Venerd.|Sabato|Domenica) ([0-9]+) (?:alle )?ore ([0-9\-:.,]+)\s*$/i))) {
+				if (m[1][0] != 'S' && m[1][0] != 'D')
+					m[1] = m[1].slice(0, m[1].length - 1) + 'ì';
+				if (m[3].length == 2)
+					m[3] += ':00';
+				this.dates.push(m[1] + " " + m[2] + " alle ore " + m[3]);
 			}
 		}
 	}
