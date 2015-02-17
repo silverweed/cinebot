@@ -21,7 +21,7 @@ wrapper =
 
 		#{@data.preplot}
 		<!--more-->
-		#{@data.postplot}
+		#{@data.postplot ? ""}
 
 		<br clear="left" />
 
