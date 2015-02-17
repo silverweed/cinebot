@@ -88,6 +88,8 @@ var Parser = (function () {
 			} else {
 				this.data.preplot = this.data.plot.slice(0, idx + 1);
 				this.data.postplot = this.data.plot.slice(idx + 1);
+				if (this.data.postplot)
+					this.data.postplot = this.data.postplot.trim();
 			}
 		} else {
 			this.data.preplot = this.data.plot;
@@ -138,7 +140,7 @@ var Parser = (function () {
 	// this function is compiled from Coffeescript.
 	Parser.prototype.emitCode = function () {
 		var code, date;
-		code = "<head>\n<style>\nli.orario\n{\n  margin-top: 15px;\n  color: #000;\n  font-size: large;\n}\n</style>\n</head>\n<div style=\"float: left; margin: 15px 15px 15px 0px;\"><iframe src=\"http://www.youtube.com/embed/" + this.yturl + "?iv_load_policy=3&start=12\" height=\"260\" width=\"320\" allowfullscreen=\"\" frameborder=\"0\"></iframe></div>\n<strong>IN SALA:</strong>\n<ul style=\"margin-left: 450px; font-family: arial;\">\n" + (this.dates.length > 0 ? ((function() {
+		code = "<head>\n<style>\nli.orario\n{\n  margin-top: 15px;\n  color: #000;\n  font-size: large;\n}\n</style>\n</head>\n<div style=\"float: left; margin: 15px 15px 15px 0px;\"><iframe src=\"http://www.youtube.com/embed/" + this.yturl + "?iv_load_policy=3\" height=\"260\" width=\"320\" allowfullscreen=\"\" frameborder=\"0\"></iframe></div>\n<strong>IN SALA:</strong>\n<ul style=\"margin-left: 450px; font-family: arial;\">\n" + (this.dates.length > 0 ? ((function() {
 		  var _i, _len, _ref, _results;
 		  _ref = this.dates;
 		  _results = [];
