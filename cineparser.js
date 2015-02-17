@@ -25,7 +25,7 @@ var Parser = (function () {
 		if (this.apiKey) {
 			this.ytReady = false;
 			https.get('https://www.googleapis.com/youtube/v3/search?part=id&q=' + file.slice(6).replace(/-/g, '+') +
-				'&videoEmbeddable=true&maxResults=1&regionCode=IT&type=video&key=' + this.apiKey,
+				'+trailer+ita&videoEmbeddable=true&maxResults=1&regionCode=IT&type=video&key=' + this.apiKey,
 				function (resp) {
 					var body = '';
 					resp.on('data', function (d) { body += d; });
@@ -37,6 +37,7 @@ var Parser = (function () {
 							return;
 						}
 						that.yturl = video.items[0].id.videoId;
+						console.log("yturl = " + that.yturl);
 						that.ytReady = true;
 						if (that.dataReady)
 							that.ee.emit('ready');
@@ -137,7 +138,7 @@ var Parser = (function () {
 	// this function is compiled from Coffeescript.
 	Parser.prototype.emitCode = function () {
 		var code, date;
-		code = "<head>\n<style>\nli.orario\n{\n  margin-top: 15px;\n  color: #000;\n  font-size: large;\n}\n</style>\n</head>\n<div style=\"float: left; margin: 15px 15px 15px 0px;\"><iframe src=\"http://www.youtube.com/embed/" + this.data.yturl + "?iv_load_policy=3&start=12\" height=\"260\" width=\"320\" allowfullscreen=\"\" frameborder=\"0\"></iframe></div>\n<strong>IN SALA:</strong>\n<ul style=\"margin-left: 450px; font-family: arial;\">\n" + (this.dates.length > 0 ? ((function() {
+		code = "<head>\n<style>\nli.orario\n{\n  margin-top: 15px;\n  color: #000;\n  font-size: large;\n}\n</style>\n</head>\n<div style=\"float: left; margin: 15px 15px 15px 0px;\"><iframe src=\"http://www.youtube.com/embed/" + this.yturl + "?iv_load_policy=3&start=12\" height=\"260\" width=\"320\" allowfullscreen=\"\" frameborder=\"0\"></iframe></div>\n<strong>IN SALA:</strong>\n<ul style=\"margin-left: 450px; font-family: arial;\">\n" + (this.dates.length > 0 ? ((function() {
 		  var _i, _len, _ref, _results;
 		  _ref = this.dates;
 		  _results = [];
@@ -167,6 +168,7 @@ var Parser = (function () {
 	Parser.prototype.reset = function () {
 		this.data = {};
 		this.dataReady = false;
+		this.ytReady = false;
 		this.dates = [];
 	}
 
