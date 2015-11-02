@@ -13,8 +13,7 @@ http.createServer(function (req, resp) {
 	switch (u.pathname) {
 	case '/process':
 		parser.reset();
-		// FIXME: add this listener only once!
-		parser.on('ready', function (data) {
+		parser.once('ready', function (data) {
 			resp.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
 			resp.end(parser.emitCode(), 'utf8');
 			console.log('Processed in ' + (new Date() - _this.time) + ' ms.');

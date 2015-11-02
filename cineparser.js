@@ -216,8 +216,13 @@ var Parser = (function () {
 	      })).join("\n") : void 0) + "\n</ul>\n\n<strong>PREZZI:</strong>\n- <em>Intero:</em> 6 €\n- <em>Ridotto</em>: 4,50 €";
 	      return code;
 	}
+
 	Parser.prototype.on = function (selector, callback) {
 		return this.ee.on(selector, callback);
+	}
+
+	Parser.prototype.once = function (selector, callback) {
+		return this.ee.once(selector, callback);
 	}
 
 	Parser.prototype.setDates = function (rawdates) {
