@@ -35,7 +35,7 @@ wrapper =
 
 		<strong>CAST:</strong>
 		<ul>
-		#{(@data.cast.map (e) -> return "\t<li>#{e}</li>").join "\n"}
+		#{if @data.cast?.map? then (@data.cast.map (e) -> return "\t<li>#{e}</li>").join "\n"}
 		</ul>
 
 		<strong>PREZZI:</strong>

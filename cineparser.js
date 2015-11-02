@@ -139,20 +139,20 @@ var Parser = (function () {
 	// Fill cineteatro template with data. Should only be called when dataReady == true. For ease of writing,
 	// this function is compiled from Coffeescript.
 	Parser.prototype.emitCode = function () {
-		var code, date;
-		code = "<head>\n<style>\nli.orario\n{\n  margin-top: 15px;\n  color: #000;\n  font-size: large;\n}\n</style>\n</head>\n<div style=\"float: left; margin: 15px 15px 15px 0px;\"><iframe src=\"http://www.youtube.com/embed/" + this.yturl + "?iv_load_policy=3\" height=\"260\" width=\"320\" allowfullscreen=\"\" frameborder=\"0\"></iframe></div>\n<strong>IN SALA:</strong>\n<ul style=\"margin-left: 450px; font-family: arial;\">\n" + (this.dates.length > 0 ? ((function() {
-		  var _i, _len, _ref, _results;
-		  _ref = this.dates;
-		  _results = [];
-		  for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-		    date = _ref[_i];
-		    _results.push("\t<li class=\"orario\">" + date + "</li>");
-		  }
-		  return _results;
-		}).call(this)).join("\n") : "	<!-- <li class=\"orario\">Inserire l'orario</li> -->") + "\n</ul>\n\n" + this.data.preplot + "\n<!--more-->\n" + ((_ref = this.data.postplot) != null ? _ref : "") + "\n\n<br clear=\"left\" />\n\n<strong>GENERE:</strong> " + this.data.genre + "\n\n<strong>NAZIONE E ANNO:</strong> " + this.data.country + " " + this.data.year + "\n\n<strong>DURATA:</strong> " + this.data.duration + "\n\n<strong>REGIA:</strong> " + this.data.direction + "\n\n<strong>CAST:</strong>\n<ul>\n" + ((this.data.cast.map(function(e) {
-		  return "\t<li>" + e + "</li>";
-		})).join("\n")) + "\n</ul>\n\n<strong>PREZZI:</strong>\n- <em>Intero:</em> 6 €\n- <em>Ridotto</em>: 4,50 €";
-		return code;
+	      var code, date, _ref, _ref1;
+	      code = "<head>\n<style>\nli.orario\n{\n  margin-top: 15px;\n  color: #000;\n  font-size: large;\n}\n</style>\n</head>\n<div style=\"float: left; margin: 15px 15px 15px 0px;\"><iframe src=\"http://www.youtube.com/embed/" + this.data.yturl + "?iv_load_policy=3&start=12\" height=\"260\" width=\"320\" allowfullscreen=\"\" frameborder=\"0\"></iframe></div>\n<strong>IN SALA:</strong>\n<ul style=\"margin-left: 450px; font-family: arial;\">\n" + (this.dates.length > 0 ? ((function() {
+		var _i, _len, _ref, _results;
+		_ref = this.dates;
+		_results = [];
+		for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+		  date = _ref[_i];
+		  _results.push("\t<li class=\"orario\">" + date + "</li>");
+		}
+		return _results;
+	      }).call(this)).join("\n") : "	<!-- <li class=\"orario\">Inserire l'orario</li> -->") + "\n</ul>\n\n" + this.data.preplot + "\n<!--more-->\n" + ((_ref = this.data.postplot) != null ? _ref : "") + "\n\n<br clear=\"left\" />\n\n<strong>GENERE:</strong> " + this.data.genre + "\n\n<strong>NAZIONE E ANNO:</strong> " + this.data.country + " " + this.data.year + "\n\n<strong>DURATA:</strong> " + this.data.duration + "\n\n<strong>REGIA:</strong> " + this.data.direction + "\n\n<strong>CAST:</strong>\n<ul>\n" + (((_ref1 = this.data.cast) != null ? _ref1.map : void 0) != null ? (this.data.cast.map(function(e) {
+		return "\t<li>" + e + "</li>";
+	      })).join("\n") : void 0) + "\n</ul>\n\n<strong>PREZZI:</strong>\n- <em>Intero:</em> 6 €\n- <em>Ridotto</em>: 4,50 €";
+	      return code;
 	}
 	Parser.prototype.on = function (selector, callback) {
 		return this.ee.on(selector, callback);
