@@ -4,6 +4,7 @@
  */
 var cheerio = require('cheerio');
 var fs = require('fs');
+var http = require('http');
 var https = require('https');
 var exec = require('child_process').exec;
 var EventEmitter = require('events').EventEmitter;
@@ -20,56 +21,106 @@ var Parser = (function () {
 		this.ytReady = false;
 	}
 	Parser.prototype.parse = function (url, opts) {
-		var file = 'pages/' + url.split('/')[4];
-		var that = this;
+		console.log('------------------' + (new Date()) + '------------------');
+		console.log('** Requested URL: ' + url);
+		var files = (function () {
+			var f = url.split('/')[4];
+			return {
+				base: f,
+				pages: 'pages/' + f,
+				videoIds: 'videoIds/' + f
+			};
+		})();
+		opts.files = files;
+		var _this = this;
 		if (this.apiKey) {
 			this.ytReady = false;
-			https.get('https://www.googleapis.com/youtube/v3/search?part=id&q=' + file.slice(6).replace(/-/g, '+') +
-				'+trailer+ita&videoEmbeddable=true&maxResults=1&regionCode=IT&type=video&key=' + this.apiKey,
-				function (resp) {
-					var body = '';
-					resp.on('data', function (d) { body += d; });
-					resp.on('end', function () {
-						console.log(body);
-						var video = JSON.parse(body);
-						if (!video.items) {
-							console.log("Invalid response from YouTube API: " + video);
-							return;
-						}
-						that.yturl = video.items[0].id.videoId;
-						console.log("yturl = " + that.yturl);
-						that.ytReady = true;
-						if (that.dataReady)
-							that.ee.emit('ready');
-					});
-				}).on('error', function (e) { console.log("Error: " + e); });
+			var ytQuery = 'https://www.googleapis.com/youtube/v3/search?part=id&q=' +
+				files.base.replace(/-/g, '+') +
+				'+trailer+ita&videoEmbeddable=true&maxResults=1&regionCode=IT&type=video&key=' + this.apiKey;
+			if (opts && opts.useCache && fs.existsSync(files.videoIds)) {
+				console.log('** Using cached videoId: ' + files.videoIds);
+				fs.readFile(files.videoIds, 'utf-8', function (err, data) {
+					if (err) {
+						_this.queryYT(ytQuery, opts);
+						return;
+					}
+					_this.yturl = data;
+					console.log('**** YT: read cached videoId: ' + _this.yturl);
+					_this.ytReady = true;
+					if (_this.dataReady)
+						_this.ee.emit('ready');
+				});
+			} else {
+				_this.queryYT(ytQuery, opts);
+			}
 		}		
-		if (fs.existsSync(file)) {
-			that.parseCS(file);
-			console.log("Parsed page " + file + ".");
-			return that;
+		if (opts && opts.useCache && fs.existsSync(files.pages)) {
+			console.log('** Using cached page: ' + files.pages);
+			_this.parseCS(cheerio.load(fs.readFileSync(files.pages, 'utf-8')));
+			console.log('**** Parsed page: ' + files.pages);
+			return _this;
 		}
-		exec("curl " + url + " | sed -n '/\"cs-components__section-contentsbox\"/,/<\\/section>/ p' > " + file,
-			function (err, stdout, stderr) {
-				if (err) throw err;
-				console.log("Fetched url " + url + ".");
-				that.parseCS(file);
-				console.log("Parsed page " + file + ".");
-				if (!(opts && opts.keepLocal))
-					fs.unlink(file, function (err) { if (err) throw err; console.log("Deleted local file "+file+"."); });
-				return that;
+		console.log('** GET page: ' + url);
+		http.get(url, function (resp) {
+			var body = '';
+			resp.on('data', function (d) { body += d; });
+			resp.on('end', function () {
+				var $ = cheerio.load(body);
+				// Concurrently parse page and save it
+				console.log('**** Page received. Parsing...');
+				_this.parseCS($);
+				console.log('**** Parsed page: ' + files.pages);
+				if (opts && opts.useCache) {
+					fs.writeFile(files.pages, '' + $('.contenitore-scheda').html(), function (err) {
+						if (err) throw err;
+						console.log('** Cached page: ' + files.pages);
+						return _this;
+					});
+				}
 			});
+		});
 	}
+
+	Parser.prototype.queryYT = function (ytQuery, opts) {
+		console.log('** Querying YouTube API: ' + ytQuery);
+		var _this = this;
+		https.get(ytQuery, function (resp) {
+			var body = '';
+			resp.on('data', function (d) { body += d; });
+			resp.on('end', function () {
+				console.log('**** Received from YouTube: ' + body);
+				var video = JSON.parse(body);
+				if (!video.items) {
+					console.log("[!!] Invalid response from YouTube API: " + video);
+					return;
+				}
+				_this.yturl = video.items[0].id.videoId;
+				console.log('**** YT: received videoId: ' + _this.yturl);
+				_this.ytReady = true;
+				if (_this.dataReady)
+					_this.ee.emit('ready');
+				if (opts && opts.useCache) {
+					fs.writeFile(opts.files.videoIds, _this.yturl, function (err) {
+						if (err) throw err;
+						console.log('** Cached videoId: ' + opts.files.videoIds + ' (' + _this.yturl + ')');
+						return _this;
+					});
+				}
+			});
+		}).on('error', function (e) { console.log("[!!] Error: " + e); });
+	}
+
 	// parse a Comingsoon.it page; subsequent calls to emitCode() will use 
 	// data from this page until a new parseCS will be called.
-	Parser.prototype.parseCS = function (file) {
-		var $ = cheerio.load(fs.readFileSync(file, 'utf8'));
-
+	// Argument: a Cheerio parser
+	Parser.prototype.parseCS = function ($) {
 		this.dataReady = false;
 		this.data = {};
 
 		// Traverse HTML tree and gather data
-		this.data.plot = $('.product-profile-box-toprow-text p').text().trim();
+		// The plot is the last child of '.contenuto-scheda-destra'
+		this.data.plot = $('.contenuto-scheda-destra').children().last().text().trim();
 		if (this.data.plot.length > 350) {
 			// split in preplot and postplot
 			var idx = -1, start = 300, cycles = 0;
@@ -96,12 +147,12 @@ var Parser = (function () {
 			this.data.postplot = null;
 		}			
 
-		var list = $('ul.product-profile-box-middlerow-list li');
+		var list = $('div.box-descrizione ul li');
 		for (var j = 0; j < list.length; ++j) {
 			var li = list[j];
 			for (var i = 0; i < li.children.length; ++i) {
 				var c = li.children[i];
-				if (c.name === 'strong') {
+				if (c.name === 'span') {
 					switch (c.children[0].data) {
 					case "GENERE":
 						this.data.genre = c.next.next.children[0].data;
@@ -123,9 +174,8 @@ var Parser = (function () {
 						this.data.country = c.next.data.slice(2);
 						break;
 					case "DURATA":
-						this.data.duration = parseInt(c.next.next.children[0].data, 10);
-						var hours = Math.floor(this.data.duration / 60);
-						this.data.duration = (hours > 0 ? hours + (hours > 1 ? " ore" : " ora") + " e " : "") + (this.data.duration - hours * 60 > 0 ? (this.data.duration - hours * 60) + " minuti" : "");
+						var dtime = c.next.next.attribs.datetime;
+						this.data.duration = this.parseDuration(dtime.slice(2, dtime.length - 1));
 						break;
 					}
 				}
@@ -136,11 +186,23 @@ var Parser = (function () {
 			this.ee.emit('ready');
 		return this;
 	}
+
+	Parser.prototype.parseDuration = function (min) {
+		var dur = parseInt(min, 10);
+		var hours = Math.floor(dur / 60);
+		return (hours > 0
+				? hours + (hours > 1 ? " ore" : " ora") + " e " 
+				: ""
+			) + (dur - hours * 60 > 0
+				? (dur - hours * 60) + " minuti"
+				: "");
+	}
+
 	// Fill cineteatro template with data. Should only be called when dataReady == true. For ease of writing,
 	// this function is compiled from Coffeescript.
 	Parser.prototype.emitCode = function () {
 	      var code, date, _ref, _ref1;
-	      code = "<head>\n<style>\nli.orario\n{\n  margin-top: 15px;\n  color: #000;\n  font-size: large;\n}\n</style>\n</head>\n<div style=\"float: left; margin: 15px 15px 15px 0px;\"><iframe src=\"http://www.youtube.com/embed/" + this.data.yturl + "?iv_load_policy=3&start=12\" height=\"260\" width=\"320\" allowfullscreen=\"\" frameborder=\"0\"></iframe></div>\n<strong>IN SALA:</strong>\n<ul style=\"margin-left: 450px; font-family: arial;\">\n" + (this.dates.length > 0 ? ((function() {
+	      code = "<head>\n<style>\nli.orario\n{\n  margin-top: 15px;\n  color: #000;\n  font-size: large;\n}\n</style>\n</head>\n<div style=\"float: left; margin: 15px 15px 15px 0px;\"><iframe src=\"http://www.youtube.com/embed/" + this.yturl + "?iv_load_policy=3&start=12\" height=\"260\" width=\"320\" allowfullscreen=\"\" frameborder=\"0\"></iframe></div>\n<strong>IN SALA:</strong>\n<ul style=\"margin-left: 450px; font-family: arial;\">\n" + (this.dates.length > 0 ? ((function() {
 		var _i, _len, _ref, _results;
 		_ref = this.dates;
 		_results = [];

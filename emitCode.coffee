@@ -1,6 +1,7 @@
 wrapper =
 	data: {}
 	dates: []
+	yturl: undefined
 	emitCode: () ->
 		code = """
 		<head>
@@ -13,7 +14,7 @@ wrapper =
 		}
 		</style>
 		</head>
-		<div style="float: left; margin: 15px 15px 15px 0px;"><iframe src="http://www.youtube.com/embed/#{@data.yturl}?iv_load_policy=3&start=12" height="260" width="320" allowfullscreen="" frameborder="0"></iframe></div>
+		<div style="float: left; margin: 15px 15px 15px 0px;"><iframe src="http://www.youtube.com/embed/#{@yturl}?iv_load_policy=3&start=12" height="260" width="320" allowfullscreen="" frameborder="0"></iframe></div>
 		<strong>IN SALA:</strong>
 		<ul style="margin-left: 450px; font-family: arial;">
 		#{if @dates.length > 0 then ("\t<li class=\"orario\">#{date}</li>" for date in @dates).join "\n" else "	<!-- <li class=\"orario\">Inserire l'orario</li> -->"}
