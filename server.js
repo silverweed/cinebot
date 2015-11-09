@@ -1,11 +1,14 @@
 var http = require('http');
 var url = require('url');
 var fs = require('fs');
+var path = require('path');
 var parser = require('./cineparser');
 
+var cwd = path.dirname(fs.realpathSync(__filename));
+console.log("cwd = " + cwd);
 var port = 8888;
 var opts = { useCache: true };
-parser.apiKey = fs.readFileSync('./api.key', 'utf8');
+parser.apiKey = fs.readFileSync(cwd + '/api.key', 'utf8');
 
 http.createServer(function (req, resp) {
 	var u = url.parse(req.url, true);
@@ -25,7 +28,7 @@ http.createServer(function (req, resp) {
 		break;
 	default:
 		resp.writeHead(200, { "Content-Type": "text/html" });
-		resp.end(fs.readFileSync('index.html', 'utf8'));
+		resp.end(fs.readFileSync(cwd + '/index.html', 'utf8'));
 	}
 }).listen(port);
 

@@ -4,10 +4,13 @@
  */
 var cheerio = require('cheerio');
 var fs = require('fs');
+var path = require('path');
 var http = require('http');
 var https = require('https');
 var exec = require('child_process').exec;
 var EventEmitter = require('events').EventEmitter;
+
+var cwd = path.dirname(fs.realpathSync(__filename));
 
 var Parser = (function () {
 	function Parser() {
@@ -27,8 +30,9 @@ var Parser = (function () {
 			var f = url.split('/')[4];
 			return {
 				base: f,
-				pages: 'pages/' + f,
-				videoIds: 'videoIds/' + f
+				full: cwd + '/' + f,
+				pages: cwd + '/pages/' + f,
+				videoIds: cwd + '/videoIds/' + f
 			};
 		})();
 		opts.files = files;
@@ -85,21 +89,25 @@ var Parser = (function () {
 	Parser.prototype.queryYT = function (ytQuery, opts) {
 		console.log('** Querying YouTube API: ' + ytQuery);
 		var _this = this;
+		var ready = function () {
+			this.ytReady = true;
+			if (_this.dataReady)
+				_this.ee.emit('ready');
+		};
 		https.get(ytQuery, function (resp) {
 			var body = '';
 			resp.on('data', function (d) { body += d; });
 			resp.on('end', function () {
 				console.log('**** Received from YouTube: ' + body);
 				var video = JSON.parse(body);
-				if (!video.items) {
+				if (!video.items[0]) {
 					console.log("[!!] Invalid response from YouTube API: " + video);
+					ready();
 					return;
 				}
 				_this.yturl = video.items[0].id.videoId;
 				console.log('**** YT: received videoId: ' + _this.yturl);
-				_this.ytReady = true;
-				if (_this.dataReady)
-					_this.ee.emit('ready');
+				ready();
 				if (opts && opts.useCache) {
 					fs.writeFile(opts.files.videoIds, _this.yturl, function (err) {
 						if (err) throw err;
