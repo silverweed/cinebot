@@ -128,7 +128,7 @@ var Parser = (function () {
 
 		// Traverse HTML tree and gather data
 		// The plot is the last child of '.contenuto-scheda-destra'
-		this.data.plot = $('.contenuto-scheda-destra').children().last().text().trim();
+		this.data.plot = $('.product-profile-box-toprow-text').children().last().text().trim();
 		if (this.data.plot.length > 350) {
 			// split in preplot and postplot
 			var idx = -1, start = 300, cycles = 0;
@@ -155,12 +155,12 @@ var Parser = (function () {
 			this.data.postplot = null;
 		}			
 
-		var list = $('div.box-descrizione ul li');
+		var list = $('div.product-profile-box-middlerow-left ul li');
 		for (var j = 0; j < list.length; ++j) {
 			var li = list[j];
 			for (var i = 0; i < li.children.length; ++i) {
 				var c = li.children[i];
-				if (c.name === 'span') {
+				if (c.name === 'strong') {
 					switch (c.children[0].data) {
 					case "GENERE":
 						this.data.genre = c.next.next.children[0].data;
