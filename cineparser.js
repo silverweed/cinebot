@@ -100,7 +100,7 @@ var Parser = (function () {
 			resp.on('end', function () {
 				console.log('**** Received from YouTube: ' + body);
 				var video = JSON.parse(body);
-				if (!video.items[0]) {
+				if (!video.items[0] || !video.items[0].id) {
 					console.log("[!!] Invalid response from YouTube API: " + video);
 					ready();
 					return;
