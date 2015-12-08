@@ -22,6 +22,7 @@ var Parser = (function () {
 		this.ee = new EventEmitter();
 		this.apiKey = null;
 		this.ytReady = false;
+		this.LATEST_CS_VERSION = 2;
 	}
 	Parser.prototype.parse = function (url, opts) {
 		console.log('------------------' + (new Date()) + '------------------');
@@ -61,7 +62,7 @@ var Parser = (function () {
 		}		
 		if (opts && opts.useCache && fs.existsSync(files.pages)) {
 			console.log('** Using cached page: ' + files.pages);
-			_this.parseCS(cheerio.load(fs.readFileSync(files.pages, 'utf-8')));
+			_this.parseCS(cheerio.load(fs.readFileSync(files.pages, 'utf-8')), opts.csVersion);
 			console.log('**** Parsed page: ' + files.pages);
 			return _this;
 		}
@@ -73,7 +74,7 @@ var Parser = (function () {
 				var $ = cheerio.load(body);
 				// Concurrently parse page and save it
 				console.log('**** Page received. Parsing...');
-				_this.parseCS($);
+				_this.parseCS($, opts.csVersion);
 				console.log('**** Parsed page: ' + files.pages);
 				if (opts && opts.useCache) {
 					fs.writeFile(files.pages, '' + $('.contenitore-scheda').html(), function (err) {
@@ -121,14 +122,22 @@ var Parser = (function () {
 
 	// parse a Comingsoon.it page; subsequent calls to emitCode() will use 
 	// data from this page until a new parseCS will be called.
-	// Argument: a Cheerio parser
-	Parser.prototype.parseCS = function ($) {
+	// Argument: a Cheerio parser; [optional] the Comingsoon format version
+	// (null = latest; 1: "old", 2: "new")
+	Parser.prototype.parseCS = function ($, csVersion) {
 		this.dataReady = false;
 		this.data = {};
+		csVersion = +csVersion || this.LATEST_CS_VERSION;
+		if (csVersion < 1 || csVersion > this.LATEST_CS_VERSION)
+			csVersion = this.LATEST_CS_VERSION;
+		console.log("**** Using csVersion = " + csVersion);
+		
+		var plotClassName = ['.product-profile-box-toprow-text',
+				     '.contenuto-scheda-destra'][csVersion - 1];
 
 		// Traverse HTML tree and gather data
 		// The plot is the last child of '.contenuto-scheda-destra'
-		this.data.plot = $('.product-profile-box-toprow-text').children().last().text().trim();
+		this.data.plot = $(plotClassName).children().last().text().trim();
 		if (this.data.plot.length > 350) {
 			// split in preplot and postplot
 			var idx = -1, start = 300, cycles = 0;
@@ -155,12 +164,15 @@ var Parser = (function () {
 			this.data.postplot = null;
 		}			
 
-		var list = $('div.product-profile-box-middlerow-left ul li');
+		var listClassName = ['div.product-profile-box-middlerow-left ul li',
+				     'div.box-descrizione ul li'][csVersion - 1];
+		var cname = ['strong', 'span'][csVersion - 1];
+		var list = $(listClassName);
 		for (var j = 0; j < list.length; ++j) {
 			var li = list[j];
 			for (var i = 0; i < li.children.length; ++i) {
 				var c = li.children[i];
-				if (c.name === 'strong') {
+				if (c.name === cname) {
 					switch (c.children[0].data) {
 					case "GENERE":
 						this.data.genre = c.next.next.children[0].data;

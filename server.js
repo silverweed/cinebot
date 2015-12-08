@@ -23,6 +23,8 @@ http.createServer(function (req, resp) {
 		});
 		if (u.query.dates.length > 0)
 			parser.setDates(u.query.dates);
+		if (u.query.v)
+			opts.csVersion = u.query.v;
 		this.time = new Date();	
 		parser.parse(u.query.page, opts);
 		break;
