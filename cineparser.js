@@ -91,7 +91,7 @@ var Parser = (function () {
 		console.log('** Querying YouTube API: ' + ytQuery);
 		var _this = this;
 		var ready = function () {
-			this.ytReady = true;
+			_this.ytReady = true;
 			if (_this.dataReady)
 				_this.ee.emit('ready');
 		};
